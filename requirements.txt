@@ -1,0 +1,19 @@
+# Core (training, orbit recovery, inference)
+torch
+torchaudio
+pytorch-lightning
+numpy
+h5py
+tqdm
+networkx        # refined orbit recovery (find_orbits.py --refine)
+mir_eval        # chord evaluation
+pretty_midi     # MIDI-derived labels (Slakh2100, POP909)
+matplotlib
+
+# Foundation models
+muq             # MuQ (OpenMuQ/MuQ-large-msd-iter)
+transformers    # MusicFM (tky823/MusicFM, trust_remote_code)
+
+# Optional: figure scripts only
+scikit-learn
+pandas
