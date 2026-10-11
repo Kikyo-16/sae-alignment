@@ -4,6 +4,7 @@ torchaudio
 pytorch-lightning
 numpy
 h5py
+soundfile       # audio decoding fallback (torchaudio >= 2.9 needs torchcodec otherwise)
 tqdm
 networkx        # refined orbit recovery (find_orbits.py --refine)
 mir_eval        # chord evaluation
@@ -12,7 +13,7 @@ matplotlib
 
 # Foundation models
 muq             # MuQ (OpenMuQ/MuQ-large-msd-iter)
-transformers    # MusicFM (tky823/MusicFM, trust_remote_code)
+transformers<5  # MusicFM (tky823/MusicFM, trust_remote_code)
 
 # Optional: figure scripts only
 scikit-learn

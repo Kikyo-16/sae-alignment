@@ -221,7 +221,10 @@ def write_results(
         p = Path(out_dir) / f"{stem}.{name}.{level}.tsv"
         write_key_rows(p, rows)
         written.append(p)
-        print(f"[{stem}] {name} ({level}):")
+        if name == TASK_KEY_CHORD:
+            print(f"[{stem}] key ({level}, using chord features):")
+        else:
+            print(f"[{stem}] {name} ({level}):")
         for r in rows:
             print(f"    {r.start_sec:8.2f} - {r.end_sec:8.2f}  {r.label}")
     if chord is not None:

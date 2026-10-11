@@ -48,7 +48,14 @@ def load_mono(path: str) -> Tuple[torch.Tensor, int]:
             wav = wav.mean(0, keepdim=True)
         return wav, sr
     else:
-        wav, sr = ta.load(path)
+        try:
+            wav, sr = ta.load(path)
+        except ImportError:
+            # torchaudio >= 2.9 decodes through TorchCodec only; fall back to soundfile.
+            import soundfile as sf
+
+            data, sr = sf.read(path, dtype="float32", always_2d=True)  # (N, C)
+            wav = torch.from_numpy(data.T.copy())
         if wav.dim() == 2 and wav.size(0) > 1:
             wav = wav.mean(0, keepdim=True)
         elif wav.dim() == 1:

@@ -19,7 +19,7 @@ chord-probe weights are scored (the setting used in the paper); without it,
 chord rings are enumerated from the SAE itself.
 
 Example:
-    python scripts/train_sae.py --model muq --layer 2 --topk 48 \\
+    python scripts/train_sae.py --model muq --layer 2 --topk 32 \\
         --h5 sae-data/slakh2100_train_16/muq/slakh2100_train_16_muq_30s_layer_2.h5 \\
         --train-track-ids splits/slakh_train.txt --val-track-ids splits/slakh_val.txt
 """

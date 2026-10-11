@@ -1,0 +1,9 @@
+# Example audio is not distributed (copyright); place your own file here.
+examples/*.wav
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Local data/weights symlink (not part of the repo)
+sae-alignment-store

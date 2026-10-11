@@ -4,7 +4,7 @@
 
  [Paper](https://arxiv.org/abs/2610.01864) (NeurIPS 2026 Poster) · [Demo page](https://Kikyo-16.github.io/sae-alignment-demo-page) · [Model weights (Google Drive)](https://drive.google.com/drive/folders/1_oqe5miPLmdfy4nk-_1qnO3LzNlk9LlS?usp=sharing)  
 
-***[Under construction. Please wait until we beta test everything or fix bugs on your own]*** Liwei authored the initial codebase, which was then refactored and organized using Claude Code.
+Liwei authored the initial codebase, which was then refactored and organized using Claude Code.
 
 ---
 
@@ -12,10 +12,10 @@
 
 - [Installation](#installation)
 - [Model weights](#model-weights)
-- [Quick start: inference](#quick-start-inference-on-audio)
+- [Quick start: inference](#quick-start-inference)
 - [1. Recovering orbits from a checkpoint](#1-recovering-orbits-from-a-checkpoint)
 - [2. Chord recognition and key detection](#2-chord-recognition-and-key-detection)
-- [Training an SAE](#3-training-an-sae)
+- [Training an SAE](#training-an-sae)
 - [Citation](#citation)
 
 ## Installation
@@ -23,8 +23,12 @@
 ```bash
 git clone https://github.com/Kikyo-16/sae-alignment.git
 cd sae-alignment
-pip install -r requirements.txt
+uv venv --python 3.12 --prompt sae-alignment
+source .venv/bin/activate
+uv pip install --torch-backend auto -r requirements.txt
 ```
+
+`--torch-backend auto` picks the PyTorch CUDA build that matches your driver. To choose one explicitly, pass e.g. `--torch-backend cu126`.
 
 The code was developed with Python 3.12 and PyTorch with CUDA. MuQ is loaded with the official `muq` package and MusicFM through `transformers` (`trust_remote_code`). Run all commands from the repository root.
 
@@ -32,22 +36,31 @@ The code was developed with Python 3.12 and PyTorch with CUDA. MuQ is loaded wit
 
 Download the checkpoints from [Google Drive](https://drive.google.com/drive/folders/1_oqe5miPLmdfy4nk-_1qnO3LzNlk9LlS?usp=sharing):
 
-- **o-SAE checkpoints** (`.ckpt`). Example model under a setting of **MuQ layer 2** at **K = 32** is avalable here [ckpt](models/sae/slakh-muq-32-3-1/slakh2100_train_16_muq-2_3-1_1e-3_32_max/ckpts/val_probe_chord_acc-epoch129-step30160-score78.9653.ckpt) and [feature_ids.txt](...).
-- [**Linear-probe checkpoints**](...) (optional). They are the paper's baselines and the reference for SAE checkpoint selection (`--chord-probe-ckpt`). They are also used to retrieve s-SAE features.
+- **o-SAE checkpoints** (`.ckpt`). An example model (**MuQ layer 2**, **K = 32**) is available: [ckpt](https://drive.google.com/file/d/1vVpEmgmiV1BD4mgX5qJDWy_StjFGz-E9/view?usp=sharing) and [feature_ids.txt](https://drive.google.com/file/d/1vTTxRGYTiBTCkT8c_Gwnh9Hr5_6k9fEp/view?usp=drive_link).
+- [**Linear-probe checkpoints**](https://drive.google.com/drive/folders/1briTaaz7ZMsvXAvfvczoRmPdgfht-3q_?usp=sharing) (optional). They are the paper's baselines and the reference for SAE checkpoint selection (`--chord-probe-ckpt`). They are also used to retrieve s-SAE features.
 
 ## Quick start: inference
 
+Download the example [ckpt](https://drive.google.com/file/d/1vVpEmgmiV1BD4mgX5qJDWy_StjFGz-E9/view?usp=sharing) and [feature_ids.txt](https://drive.google.com/file/d/1vTTxRGYTiBTCkT8c_Gwnh9Hr5_6k9fEp/view?usp=drive_link), and place them as:
+
+```text
+weights/muq-2_k32/o-sae.ckpt
+weights/muq-2_k32/feature_ids.txt
+```
+
+Then run:
+
 ```bash
 python scripts/infer_sae.py \
-    --ckpt <o-sae.ckpt> \
-    --feature-ids <feature_ids.txt> \
-    --audio song.mp3 \
+    --ckpt weights/muq-2_k32/o-sae.ckpt \
+    --feature-ids weights/muq-2_k32/feature_ids.txt \
+    --audio examples/test.wav \
     --task key-signature key-chord chord \
     --level song \
     --out-dir outputs
 ```
 
-The foundation model (MuQ / MusicFM) and its layer are read from the checkpoint, and the foundation model is downloaded automatically. `feature_ids.txt` lists the labelled orbits of the checkpoint; download it from [google drive](https://drive.google.com/drive/folders/1wyQnRppR8sXX9QkemAoU6LPs17BXhtsy?usp=sharing) or create it with step 1.
+The foundation model (MuQ / MusicFM) and its layer are read from the checkpoint, and the foundation model is downloaded automatically. `feature_ids.txt` lists the labelled orbits of the checkpoint; download it from [google drive](https://drive.google.com/drive/folders/166Vs8kUmzIEgZ3zV6p-tNhoEEHve1rlJ?usp=sharing) or create it with step 1. A `feature_ids.txt` only matches the checkpoint it was built from.
 
 ### 1. Recovering orbits from a checkpoint
 
@@ -58,7 +71,7 @@ python scripts/find_orbits.py --ckpt <o-sae.ckpt> --out-dir results/muq-2 [--thr
 Orbit recovery reads only the decoder dictionaries, so it needs no data or labels.
 
 - By default it uses the successor-map recovery of Sec. 3.3: three sub-SAEs, the middle SAE as reference, bidirectional confidence, and threshold `--threshold` (τ, default 0.5).
-- `--refine` switches to the sparse directed-graph recovery of App. G.2. It also keeps near-cyclic orbits that the strict one-edge rule misses.
+- `--refine` switches to the sparse directed-graph recovery of App. G.2. It also keeps near-cyclic orbits that the strict one-edge rule misses. The released `feature_ids.txt` was built from the `--refine` output.
 
 Output files in `--out-dir`:
 
@@ -67,7 +80,7 @@ Output files in `--out-dir`:
 | `orbits_raw.txt` | All recovered structures, one per line: `[Ring 00]: 12 a -> b -> ...` for rings, `[Seq 00]: n a -> ...` for open sequences. With `--refine`, the tags are `Ring12` / `Seq12` / `Chain` / `GreedyRing12` and carry edge-score metadata. |
 | `orbits_raw_score.txt` | `--refine` only: the edge scores of every structure in `orbits_raw.txt`. |
 | `timbre.txt` | Fixed points: features whose successor is themselves, i.e. candidate pitch-invariant concepts. |
-| `invalid.txt` | Features without an accepted successor (default recovery only). |
+| `invalid.txt` | Features without an accepted successor (default recovery; empty with `--refine`). |
 
 #### Interpreting orbits
 
@@ -77,7 +90,7 @@ Plot the activations of the recovered orbits on a few songs whose chords or key 
 python scripts/plot_activations.py \
     --ckpt <o-sae.ckpt> \
     --feature-ids results/muq-2/orbits_raw.txt --min-orbit-size 10 \
-    --audio song.mp3 --out-dir plots
+    --audio examples/test.wav --out-dir plots
 ```
 
 This writes one heatmap per 30-second segment to `plots/<stem>/`. Time runs along the x-axis, the y-axis lists feature ids, and red lines separate orbits. `--feature-ids` accepts `orbits_raw.txt` or any file with one feature-id group per line.
@@ -88,11 +101,13 @@ From the plots, pick the orbits you need and write them into `feature_ids.txt`. 
 [Major Chord]: 12 f_C -> f_C# -> ... -> f_B      # position p = major chord with root p
 [Minor Chord]: 12 ...                             # position p = minor chord with root p
 [Forth]: 12 ...                                   # subdominant ring: position p = subdominant pitch class p
-[Chord Boundary]: 1 b                             # feature that peaks at chord changes
+[Fifth]: 12 ...                                   # optional, for --key-ring fifth
+[Tonic]: 12 ...                                   # optional, for --key-ring tonic
+[Chord Boundary]: n b1 -> b2 -> ...               # features that peak at chord changes, best first
 [Silence]: s1 s2                                  # features active on silence
 ```
 
-Only the groups that a task uses are required (see the table in step 2).
+Only the groups that a task uses are required (see the table in step 2). `[Chord Boundary]` is a ranked candidate list, not an orbit (these features are usually fixed points in `timbre.txt`); `--boundary-rank k` uses the k-th entry (default 1).
 
 ### 2. Chord recognition and key detection
 
@@ -104,7 +119,7 @@ python scripts/infer_sae.py --ckpt <ckpt> --feature-ids <feature_ids.txt> \
 | `--task` | Description | Orbits used |
 |---|---|---|
 | `key-signature` | Key detection that ignores the relative major/minor difference (Table 2, App. D.2). The output is a key signature such as `G:maj/E:min`. | `[Forth]` (or `--key-ring fifth/tonic`) |
-| `key-chord` | Key detection over 24 major/minor keys from chord features (Table 3, App. D.3). | `[Major Chord]`, `[Minor Chord]` |
+| `key-chord` | Key detection over 24 major/minor keys from chord features (Table 3, App. D.3). The output is a key such as `E:min`; the console labels it `key (<level>, using chord features)`. | `[Major Chord]`, `[Minor Chord]` |
 | `chord` | Chord recognition over 12 major + 12 minor chords + `N` (Table 1, App. D.1). | chord rings, `[Chord Boundary]`, `[Silence]` |
 
 **Segmentation.** Audio is resampled to 16 kHz and cut into non-overlapping 30-second segments, exactly as in the paper. `--last-segment` controls what happens to the remainder shorter than 30 s:
@@ -112,7 +127,7 @@ python scripts/infer_sae.py --ckpt <ckpt> --feature-ids <feature_ids.txt> \
 - `drop` (default): discard it, as in the paper.
 - `overlap`: run one more 30 s window that ends at the last sample, and keep only the results of its non-overlapping part.
 
-Audio shorter than 30 s is skipped.
+Audio shorter than 30 s is skipped. Any format readable by TorchCodec or libsndfile works (e.g. wav, flac, mp3).
 
 **Key level.** `--level segment` writes one key per 30 s segment. `--level song` (default) writes one key per file, aggregated as in the paper's song-level evaluation: the 12-d key-signature scores are summed over segments (`key-signature`), and the 24 template scores are averaged over segments (`key-chord`).
 
