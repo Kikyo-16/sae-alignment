@@ -2,7 +2,7 @@
 
 **Liwei Lin** (liwei.lin@nyu.edu) · **Gus Xia** (Gus.Xia@mbzuai.ac.ae)
 
- [Paper](https://arxiv.org/abs/2610.01864) (NeurIPS 2026 Poster) · [Demo page](https://Kikyo-16.github.io/sae-alignment-demo-page) · [Model weights (Google Drive)](https://drive.google.com/drive/folders/1_oqe5miPLmdfy4nk-_1qnO3LzNlk9LlS?usp=sharing)  
+ [Paper](https://openreview.net/forum?id=OiLTPYgHYL#discussion) (NeurIPS 2026 Poster) · [Demo page](https://Kikyo-16.github.io/sae-alignment-demo-page) · [Model weights (Google Drive)](https://drive.google.com/drive/folders/1_oqe5miPLmdfy4nk-_1qnO3LzNlk9LlS?usp=sharing)  
 
 Liwei authored the initial codebase, which was then refactored and organized using Claude Code.
 
